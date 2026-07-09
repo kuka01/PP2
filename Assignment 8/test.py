@@ -10,100 +10,121 @@ conn = psycopg2.connect(
 
 cur = conn.cursor()
 
-print("=" * 50)
-print("ASSIGNMENT 8 TEST")
-print("=" * 50)
 
-# -----------------------------
-# TASK 1
-# -----------------------------
-print("\n1. Search by pattern")
+def test_search():
+    print("\n=== Task 1: Search by Pattern ===")
+    pattern = input("Enter pattern: ")
+    cur.execute("SELECT * FROM get_contacts_by_pattern(%s);", (pattern,))
+    rows = cur.fetchall()
 
-cur.execute("SELECT * FROM get_contacts_by_pattern('777')")
-rows = cur.fetchall()
+    for row in rows:
+        print(row)
 
-for row in rows:
-    print(row)
 
-# -----------------------------
-# TASK 2
-# -----------------------------
-print("\n2. Pagination")
+def test_pagination():
+    print("\n=== Task 2: Pagination ===")
+    limit = int(input("Limit: "))
+    offset = int(input("Offset: "))
 
-cur.execute("SELECT * FROM get_contacts_paginated(5,0)")
-rows = cur.fetchall()
+    cur.execute(
+        "SELECT * FROM get_contacts_paginated(%s,%s);",
+        (limit, offset)
+    )
 
-for row in rows:
-    print(row)
+    rows = cur.fetchall()
 
-# -----------------------------
-# TASK 3
-# -----------------------------
-print("\n3. Upsert")
+    for row in rows:
+        print(row)
 
-cur.execute("""
-CALL upsert_contact(
-'Test',
-'User',
-'87001112233'
-)
-""")
-conn.commit()
 
-cur.execute("""
-SELECT *
-FROM contacts
-WHERE first_name='Test'
-""")
+def test_upsert():
+    print("\n=== Task 3: Upsert Contact ===")
 
-print(cur.fetchall())
+    first = input("First name: ")
+    last = input("Last name: ")
+    phone = input("Phone: ")
 
-# -----------------------------
-# TASK 4
-# -----------------------------
-print("\n4. Insert many")
+    cur.execute(
+        "CALL upsert_contact(%s,%s,%s);",
+        (first, last, phone)
+    )
 
-cur.execute("""
-CALL insert_many_contacts(
-ARRAY['AAA','BBB'],
-ARRAY['One','Two'],
-ARRAY['87000000001','87000000002']
-)
-""")
+    conn.commit()
 
-conn.commit()
+    print("Done!")
 
-cur.execute("""
-SELECT *
-FROM contacts
-WHERE first_name IN ('AAA','BBB')
-""")
 
-print(cur.fetchall())
+def test_insert_many():
+    print("\n=== Task 4: Insert Many Contacts ===")
 
-# -----------------------------
-# TASK 5
-# -----------------------------
-print("\n5. Delete")
+    first = ['Ali', 'John']
+    last = ['A', 'B']
+    phone = ['87000000001', '87000000002']
 
-cur.execute("""
-CALL delete_contact(
-'AAA',
-NULL
-)
-""")
+    cur.execute(
+        "CALL insert_many_contacts(%s,%s,%s);",
+        (first, last, phone)
+    )
 
-conn.commit()
+    conn.commit()
 
-cur.execute("""
-SELECT *
-FROM contacts
-WHERE first_name='AAA'
-""")
+    print("Two contacts inserted.")
 
-print(cur.fetchall())
+
+def test_delete():
+    print("\n=== Task 5: Delete Contact ===")
+
+    first = input("First name (leave empty if deleting by phone): ")
+    phone = input("Phone (leave empty if deleting by name): ")
+
+    if first == "":
+        first = None
+
+    if phone == "":
+        phone = None
+
+    cur.execute(
+        "CALL delete_contact(%s,%s);",
+        (first, phone)
+    )
+
+    conn.commit()
+
+    print("Deleted.")
+
+
+while True:
+
+    print("\n========== Assignment 8 ==========")
+    print("1. Search by pattern")
+    print("2. Pagination")
+    print("3. Upsert contact")
+    print("4. Insert many contacts")
+    print("5. Delete contact")
+    print("0. Exit")
+
+    choice = input("Choose: ")
+
+    if choice == "1":
+        test_search()
+
+    elif choice == "2":
+        test_pagination()
+
+    elif choice == "3":
+        test_upsert()
+
+    elif choice == "4":
+        test_insert_many()
+
+    elif choice == "5":
+        test_delete()
+
+    elif choice == "0":
+        break
+
+    else:
+        print("Wrong choice!")
 
 cur.close()
 conn.close()
-
-print("\nAll tests completed successfully!")

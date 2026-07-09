@@ -1,5 +1,5 @@
 import psycopg2
-
+import re
 
 conn = psycopg2.connect(
     host="localhost",
@@ -10,6 +10,16 @@ conn = psycopg2.connect(
 )
 
 cursor = conn.cursor()
+
+def input_phone():
+    while True:
+        phone = input("Введите телефон (+77*********): ")
+
+        if re.fullmatch(r"\+77\d{9}", phone):
+            return phone
+
+        print("❌ Неверный формат номера!")
+        print("Введите номер в формате: +77*********\n")
 
 
 def show_contacts():
@@ -26,7 +36,7 @@ def show_contacts():
 def add_contact():
     first_name = input("Введите имя: ")
     last_name = input("Введите фамилию: ")
-    phone = input("Введите телефон: ")
+    phone = input_phone()
 
     cursor.execute(
         """
@@ -61,7 +71,7 @@ def find_contact():
 
 def update_contact():
     name = input("Введите имя контакта: ")
-    new_phone = input("Введите новый телефон: ")
+    new_phone = input_phone()
 
     cursor.execute(
         """
@@ -135,5 +145,3 @@ cursor.close()
 conn.close()
 
 
-cursor.close()
-conn.close()
